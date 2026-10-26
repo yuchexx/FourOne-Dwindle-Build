@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
+    <title>Dwindle</title>
+    <style>
+      /* the game fills as much of the window as fits at 16:9 (the layout the game is built for), centered */
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1f2127; }
+      #unity-canvas { position: absolute; display: block; background: #1f2127; }
+      #loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                 color: #c9ccd4; font: 16px system-ui, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="loading">Loading...</div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var ASPECT = 16 / 9;
+
+      // the largest 16:9 box that fits the window, centered; runs again whenever the window changes size
+      function fit() {
+        var w = window.innerWidth, h = window.innerHeight;
+        var cw = Math.min(w, h * ASPECT), ch = cw / ASPECT;
+        canvas.style.width = cw + "px";
+        canvas.style.height = ch + "px";
+        canvas.style.left = (w - cw) / 2 + "px";
+        canvas.style.top = (h - ch) / 2 + "px";
+      }
+      window.addEventListener("resize", fit);
+      fit();
+
+      var buildUrl = "Build";
+      var config = {
+        dataUrl: buildUrl + "/BetaProgress.data.unityweb",
+        frameworkUrl: buildUrl + "/BetaProgress.framework.js.unityweb",
+        codeUrl: buildUrl + "/BetaProgress.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Dwindle",
+        productVersion: "1.0",
+      };
+
+      var loading = document.querySelector("#loading");
+      var script = document.createElement("script");
+      script.src = buildUrl + "/BetaProgress.loader.js";
+      script.onload = function () {
+        createUnityInstance(canvas, config, function (progress) {
+          loading.textContent = "Loading " + Math.round(progress * 100) + "%";
+        }).then(function () {
+          loading.remove();
+        }).catch(function (message) {
+          loading.textContent = message;
+        });
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
