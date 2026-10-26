@@ -5,28 +5,49 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
     <title>Dwindle</title>
     <style>
-      /* the game fills as much of the window as fits at 16:9 (the layout the game is built for), centered */
-      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1f2127; }
-      #unity-canvas { position: absolute; display: block; background: #1f2127; }
+      /* the game, at 16:9 (the layout it's built for), as large as fits the window above a bar with its name and a
+         full-screen button, like Unity's Default page. everything is in this file, so there's no TemplateData folder */
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #ffffff; }
+      #unity-container { position: absolute; }
+      #unity-canvas { display: block; background: #231f20; }
+      #unity-footer { height: 38px; display: flex; align-items: center; justify-content: space-between;
+                      font: 18px Arial, sans-serif; color: #333333; }
+      #unity-fullscreen-button { width: 38px; height: 38px; padding: 0; border: 0; background: none; cursor: pointer;
+                                 display: grid; place-items: center; }
+      #unity-fullscreen-button:hover svg { opacity: 0.7; }
       #loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-                 color: #c9ccd4; font: 16px system-ui, sans-serif; }
+                 color: #c9ccd4; font: 16px Arial, sans-serif; pointer-events: none; }
     </style>
   </head>
   <body>
-    <canvas id="unity-canvas" tabindex="-1"></canvas>
-    <div id="loading">Loading...</div>
+    <div id="unity-container">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="unity-footer">
+        <span id="unity-title">Dwindle</span>
+        <button id="unity-fullscreen-button" title="Full screen" aria-label="Full screen">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#333333" stroke-width="2.4" stroke-linecap="square">
+            <path d="M2 8V2h6M14 2h6v6M20 14v6h-6M8 20H2v-6"/>
+          </svg>
+        </button>
+      </div>
+      <div id="loading">Loading...</div>
+    </div>
     <script>
+      var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
+      var FOOTER = 38;      // the bar under the game
+      var MARGIN = 10;      // space kept around the game and its bar
       var ASPECT = 16 / 9;
 
-      // the largest 16:9 box that fits the window, centered; runs again whenever the window changes size
+      // the largest 16:9 game that fits the window with its bar under it, centered; runs again on every resize
       function fit() {
-        var w = window.innerWidth, h = window.innerHeight;
-        var cw = Math.min(w, h * ASPECT), ch = cw / ASPECT;
+        var w = window.innerWidth - 2 * MARGIN, h = window.innerHeight - 2 * MARGIN - FOOTER;
+        var cw = Math.max(160, Math.min(w, h * ASPECT)), ch = cw / ASPECT;
         canvas.style.width = cw + "px";
         canvas.style.height = ch + "px";
-        canvas.style.left = (w - cw) / 2 + "px";
-        canvas.style.top = (h - ch) / 2 + "px";
+        container.style.width = cw + "px";
+        container.style.left = (window.innerWidth - cw) / 2 + "px";
+        container.style.top = Math.max(MARGIN, (window.innerHeight - ch - FOOTER) / 2) + "px";
       }
       window.addEventListener("resize", fit);
       fit();
@@ -48,8 +69,10 @@
       script.onload = function () {
         createUnityInstance(canvas, config, function (progress) {
           loading.textContent = "Loading " + Math.round(progress * 100) + "%";
-        }).then(function () {
+        }).then(function (unityInstance) {
           loading.remove();
+          // the game alone fills the screen, as on Unity's Default page; Esc comes back
+          document.querySelector("#unity-fullscreen-button").onclick = function () { unityInstance.SetFullscreen(1); };
         }).catch(function (message) {
           loading.textContent = message;
         });
