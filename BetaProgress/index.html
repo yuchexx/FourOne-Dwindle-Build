@@ -6,6 +6,8 @@
     <title>Unity Web Player | Dwindle</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+    <!-- the game always fits the window, so the page never scrolls (rounding could otherwise add scrollbars) -->
+    <style>html, body { overflow: hidden; }</style>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
@@ -113,9 +115,9 @@
           var full = !!(document.fullscreenElement || document.webkitFullscreenElement);
           var footer = full ? 0 : FOOTER, margin = full ? 0 : MARGIN;
           var w = window.innerWidth - 2 * margin, h = window.innerHeight - 2 * margin - footer;
-          var cw = Math.max(160, Math.min(w, h * ASPECT));
+          var cw = Math.floor(Math.max(160, Math.min(w, h * ASPECT))); // whole pixels, rounded down, so it never overflows
           canvas.style.width = cw + "px";
-          canvas.style.height = cw / ASPECT + "px";
+          canvas.style.height = Math.floor(cw / ASPECT) + "px";
           document.querySelector("#unity-footer").style.display = full ? "none" : "";
           document.body.style.background = full ? "#000000" : "";
         }
